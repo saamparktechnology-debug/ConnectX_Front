@@ -1,98 +1,61 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+// src/app/index.tsx
+import { ratingsApi } from "@/api/ratings";
+import { usersApi } from "@/api/users";
+import { useAuthStore } from "@/auth/authStore";
+import { useQuery } from "@tanstack/react-query";
+import { Redirect } from "expo-router";
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+export default function Index() {
+  const status = useAuthStore((s) => s.status);
+  const user = useAuthStore((s) => s.user);
 
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
+  // Fetch fresh user state
+  const { data: me, isLoading: loadingMe } = useQuery({
+    queryKey: ["me"],
+    queryFn: () => usersApi.getMe(),
+    enabled: status === "authenticated",
+    staleTime: 0,
+  });
+
+  // Fetch pending rating — only males rate (females don't get prompted)
+  const isMale = user?.gender === "male";
+  const { data: pendingRating, isLoading: loadingRating } = useQuery({
+    queryKey: ["ratings", "pending"],
+    queryFn: () => ratingsApi.getPending(),
+    enabled: status === "authenticated" && isMale,
+    staleTime: 0,
+  });
+
+  if (status === "boot") return null;
+
+  if (status !== "authenticated" || !user) {
+    return <Redirect href="/(auth)/phone" />;
   }
-  if (Device.isDevice) {
-    return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
-    );
+
+  // Wait for the fresh snapshot before routing
+  if (loadingMe) return null;
+  if (isMale && loadingRating) return null;
+
+  const liveStatus = me?.verificationStatus ?? user.verificationStatus;
+
+  // Onboarding gate
+  if (!user.onboardingCompleted) {
+    return <Redirect href="/(onboarding)/profile" />;
   }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
-  return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
-  );
+
+  // Female verification gate
+  const needsVoice =
+    user.gender === "female" &&
+    (liveStatus === "unverified" || liveStatus === "rejected");
+
+  if (needsVoice) {
+    return <Redirect href="/(onboarding)/voice" />;
+  }
+
+  // Male with outstanding rating → force rating first
+  if (isMale && pendingRating) {
+    return <Redirect href="/rating/pending" />;
+  }
+
+  return <Redirect href="/(tabs)/home" />;
 }
-
-export default function HomeScreen() {
-  return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
-
-        <ThemedText type="code" style={styles.code}>
-          get started
-        </ThemedText>
-
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
-          />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
-
-        {Platform.OS === 'web' && <WebBadge />}
-      </SafeAreaView>
-    </ThemedView>
-  );
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    justifyContent: 'center',
-    flexDirection: 'row',
-  },
-  safeArea: {
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
-    maxWidth: MaxContentWidth,
-  },
-  heroSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
-    paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
-  },
-  title: {
-    textAlign: 'center',
-  },
-  code: {
-    textTransform: 'uppercase',
-  },
-  stepContainer: {
-    gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
-  },
-});
