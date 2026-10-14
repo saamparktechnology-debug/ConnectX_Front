@@ -1,3 +1,4 @@
+// src/app/settings/delete-account.tsx
 import { userMessage } from "@/api/errors";
 import { usersApi } from "@/api/users";
 import { useAuthStore } from "@/auth/authStore";

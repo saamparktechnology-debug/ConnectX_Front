@@ -557,7 +557,7 @@ function FemaleHome() {
       {/* Top bar */}
       <View style={styles.topBar}>
         <Text style={{ fontSize: 26, fontWeight: "800", fontStyle: "italic" }}>
-          Connecto
+          ConnectX
         </Text>
 
         <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
@@ -776,7 +776,7 @@ function FemaleHome() {
                   marginTop: 12,
                 }}
               >
-                Connecto Safety 🛡
+                ConnectX Safety 🛡
               </Text>
             </LinearGradient>
 

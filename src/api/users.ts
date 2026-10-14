@@ -29,6 +29,8 @@ export type MeResponse = {
   walletBalance: string;
   onboardingCompleted: boolean;
   birthYear: number | null;
+  termsAcceptedAt: string | null;
+  channelsAcknowledgedAt: string | null;
 };
 
 export type SendOtpResponse = { debugOtp?: string };

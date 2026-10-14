@@ -3,7 +3,6 @@
 //   - CompanionDetailSheet opens on tap
 //   - pull-to-refresh
 //   - loading + error + empty states
-// VISUAL CHANGES: uses same Connecto card style through CompanionCard
 
 import type { DiscoverableFemale } from "@/api/users";
 import { CompanionDetailSheet } from "@/components/CompanionDetailSheet";

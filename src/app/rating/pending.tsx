@@ -1,4 +1,3 @@
-// src/app/rating/pending.tsx
 import { userMessage } from "@/api/errors";
 import { ratingsApi, type PendingRating } from "@/api/ratings";
 import { showToast } from "@/lib/toast";
@@ -7,7 +6,7 @@ import { Button, Input, Screen, Text } from "@/ui";
 import { Ionicons } from "@expo/vector-icons";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Pressable, View } from "react-native";
 
 export default function RatingPendingScreen() {
@@ -36,6 +35,13 @@ export default function RatingPendingScreen() {
 
   const skip = () => router.replace("/(tabs)/home");
 
+  // Redirect safely — only after render commits
+  useEffect(() => {
+    if (!isLoading && !data) {
+      router.replace("/(tabs)/home");
+    }
+  }, [isLoading, data, router]);
+
   if (isLoading) {
     return (
       <Screen>
@@ -50,11 +56,8 @@ export default function RatingPendingScreen() {
     );
   }
 
-  if (!data) {
-    // No pending rating — go home
-    router.replace("/(tabs)/home");
-    return null;
-  }
+  // If no pending rating, we've scheduled a redirect — render nothing to avoid flash
+  if (!data) return null;
 
   return (
     <Screen>
@@ -70,7 +73,6 @@ export default function RatingPendingScreen() {
           </Text>
         </View>
 
-        {/* Star rating */}
         <View
           style={{
             flexDirection: "row",
@@ -90,7 +92,6 @@ export default function RatingPendingScreen() {
           ))}
         </View>
 
-        {/* Review */}
         <Input
           label="Add a comment (optional)"
           placeholder="How was the experience?"

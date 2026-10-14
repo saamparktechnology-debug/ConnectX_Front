@@ -95,7 +95,7 @@ export default function ProfileScreen() {
                 value={birthYear}
                 onChangeText={(t) => setBirthYear(t.replace(/\D/g, ""))}
                 placeholder="1998"
-                hint="You must be 18+ to use connectx24."
+                hint="You must be 18+ to use connectx."
               />
             </View>
           ) : null}

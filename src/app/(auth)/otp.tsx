@@ -1,5 +1,3 @@
-// src/app/(auth)/otp.tsx
-
 import { authApi, type VerifyOtpResponse } from "@/api/auth";
 import { userMessage } from "@/api/errors";
 import { useAuthStore } from "@/auth/authStore";
@@ -17,28 +15,9 @@ import { KeyboardAvoidingView, Platform, View } from "react-native";
 export default function OtpScreen() {
   const router = useRouter();
   const { spacing } = useTheme();
-
-  const params = useLocalSearchParams<{
-    phone: string;
-    debugOtp?: string;
-    gender: "male" | "female";
-    nickname: string;
-  }>();
-
+  const params = useLocalSearchParams<{ phone: string; debugOtp?: string }>();
   const phone = params.phone ?? "";
   const debugOtp = params.debugOtp ?? "";
-  const gender = (params.gender ?? "male") as "male" | "female";
-  const nickname = params.nickname ?? "";
-
-  // ── DIAGNOSTIC (fires once per mount) ──
-  useEffect(() => {
-    console.log("════════ [otp.tsx] MOUNTED ════════");
-    console.log("[otp.tsx] phone:   ", phone);
-    console.log("[otp.tsx] gender:  ", gender);
-    console.log("[otp.tsx] nickname:", nickname);
-    console.log("[otp.tsx] debugOtp:", debugOtp);
-    console.log("════════════════════════════════════");
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const setSession = useAuthStore((s) => s.setSession);
   const [code, setCode] = useState(debugOtp);
@@ -59,29 +38,19 @@ export default function OtpScreen() {
   }, [resendCooldown]);
 
   const verify = useMutation({
-    mutationFn: () => {
-      // Build the payload explicitly. Log it before sending.
-      const payload = {
-        phone,
-        otp: code,
-        deviceId,
-        gender,
-        nickname,
-      };
-
-      console.log("════════ [otp.tsx] VERIFY CLICKED ════════");
-      console.log("[otp.tsx] payload being sent to authApi.verifyOtp:");
-      console.log(JSON.stringify({ ...payload, otp: "••••" }, null, 2));
-      console.log("══════════════════════════════════════════");
-
-      return authApi.verifyOtp(payload);
-    },
+    mutationFn: () => authApi.verifyOtp({ phone, otp: code, deviceId }),
     onSuccess: async (data: VerifyOtpResponse) => {
-      console.log("[otp.tsx] ✅ verify success:", {
-        isNewUser: data.isNewUser,
-        userId: data.user.id,
-        nickname: data.user.nickname,
-      });
+      if (data.onboardingRequired) {
+        router.replace({
+          pathname: "/(auth)/gender",
+          params: {
+            phone,
+            deviceId,
+            onboardingToken: data.onboardingToken,
+          },
+        });
+        return;
+      }
 
       const stored: StoredUser = {
         id: data.user.id,
@@ -90,23 +59,25 @@ export default function OtpScreen() {
         phone: data.user.phone,
         gender: data.user.gender,
         nickname: data.user.nickname,
+        avatarUrl: data.user.avatarUrl,
         verificationStatus: data.user.verificationStatus,
         walletBalance: data.user.walletBalance,
-        isOnline: Boolean(data.user.isOnline),
+        isOnline: data.user.isOnline,
+        onboardingCompleted: data.user.onboardingCompleted,
+        primaryLanguage: data.user.primaryLanguage,
+        termsAcceptedAt: data.user.termsAcceptedAt,
+        channelsAcknowledgedAt: data.user.channelsAcknowledgedAt,
       };
 
       await setSession({
         user: stored,
-        accessToken: data.accessToken,
-        refreshToken: data.refreshToken,
+        accessToken: data.accessToken!,
+        refreshToken: data.refreshToken!,
       });
 
-      router.replace("/(onboarding)/profile");
+      router.replace("/(tabs)/home");
     },
-    onError: (err) => {
-      console.log("[otp.tsx] ❌ verify error:", err);
-      showToast(userMessage(err), "error");
-    },
+    onError: (err) => showToast(userMessage(err), "error"),
   });
 
   const resend = useMutation({

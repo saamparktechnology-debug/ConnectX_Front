@@ -1,27 +1,38 @@
+// src/features/calls/ZegoCallRoom.tsx
 import { useAuthStore } from "@/auth/authStore";
 import { useTheme } from "@/theme";
 import { Text } from "@/ui";
 import { Ionicons } from "@expo/vector-icons";
-import { useEffect, useRef, useState } from "react";
-import { ActivityIndicator, View } from "react-native";
+import {
+  ONE_ON_ONE_VOICE_CALL_CONFIG,
+  ZegoMenuBarButtonName,
+} from "@zegocloud/zego-uikit-prebuilt-call-rn";
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  ActivityIndicator,
+  PermissionsAndroid,
+  Platform,
+  View,
+} from "react-native";
 import { zegoConfig, zegoUserId, zegoUserName } from "./zegoService";
 
-// Dynamic import so the module loads only when a call is mounted.
-// This avoids a hard import error if the package isn't present yet.
-let ZegoUIKitPrebuilt: any = null;
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+let ZegoUIKitPrebuiltCall: any = null;
+let zegoLoadError: string | null = null;
 
 try {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
   const mod = require("@zegocloud/zego-uikit-prebuilt-call-rn");
-  ZegoUIKitPrebuilt = mod.ZegoUIKitPrebuilt;
-} catch {
-  ZegoUIKitPrebuilt = null;
+  ZegoUIKitPrebuiltCall = mod.ZegoUIKitPrebuiltCall ?? null;
+  if (!ZegoUIKitPrebuiltCall)
+    zegoLoadError = "ZegoUIKitPrebuiltCall export missing";
+} catch (err) {
+  zegoLoadError = err instanceof Error ? err.message : "load error";
 }
 
 type Props = {
   sessionUuid: string;
   roomId: string;
-  token: string;
+  token?: string;
   peerNickname: string;
   onCallEnded: () => void;
 };
@@ -29,32 +40,57 @@ type Props = {
 export function ZegoCallRoom({
   sessionUuid,
   roomId,
-  token,
   peerNickname,
   onCallEnded,
 }: Props) {
   const { colors, spacing } = useTheme();
   const user = useAuthStore((s) => s.user);
   const [error, setError] = useState<string | null>(null);
-
-  // Guard against onCallEnded firing multiple times
+  const [micReady, setMicReady] = useState(Platform.OS !== "android");
   const endedRef = useRef(false);
-  const handleEnd = () => {
-    if (endedRef.current) return;
-    endedRef.current = true;
-    onCallEnded();
-  };
+
+  const handleEnd = useCallback(
+    (from: string) => {
+      if (endedRef.current) return;
+      endedRef.current = true;
+      console.log(`[zego] handleEnd from ${from}`);
+      onCallEnded();
+    },
+    [onCallEnded],
+  );
+
+  useEffect(() => {
+    if (Platform.OS !== "android") {
+      setMicReady(true);
+      return;
+    }
+    (async () => {
+      try {
+        const res = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.RECORD_AUDIO,
+          {
+            title: "Microphone",
+            message: "Connect24x needs microphone access for voice calls.",
+            buttonPositive: "Allow",
+            buttonNegative: "Cancel",
+          },
+        );
+        setMicReady(res === PermissionsAndroid.RESULTS.GRANTED);
+      } catch {
+        setMicReady(true);
+      }
+    })();
+  }, []);
 
   useEffect(() => {
     if (!zegoConfig.isConfigured) {
       setError(
-        "ZEGOCLOUD is not configured. Add EXPO_PUBLIC_ZEGO_APP_ID to .env.",
+        `ZEGOCLOUD AppID or 64-char AppSign missing (appSign length: ${zegoConfig.appSign.length}).`,
       );
+      return;
     }
-    if (!ZegoUIKitPrebuilt) {
-      setError(
-        "ZEGOCLOUD UI Kit not installed. Run: npx expo install @zegocloud/zego-uikit-prebuilt-call-rn",
-      );
+    if (!ZegoUIKitPrebuiltCall) {
+      setError(zegoLoadError ?? "ZEGOCLOUD UI Kit unavailable");
     }
   }, []);
 
@@ -87,61 +123,49 @@ export function ZegoCallRoom({
     );
   }
 
-  if (!user) {
+  if (!user || !ZegoUIKitPrebuiltCall || !micReady) {
     return (
       <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
-        <ActivityIndicator color={colors.rose} />
+        <ActivityIndicator color={colors.primary} />
       </View>
     );
   }
 
-  const myUserId = zegoUserId(user.id);
-  const myUserName = zegoUserName(user.nickname);
+  const Z = ZegoUIKitPrebuiltCall;
 
-  // The ZEGOCLOUD UI Kit mounts full-screen. It handles:
-  //  - Joining the room with the given token
-  //  - Audio routing, mute, speaker toggle
-  //  - End-call button (which we intercept via onCallEnd)
-  //  - Peer-disconnect detection
   return (
-    <ZegoUIKitPrebuilt
+    <Z
       appID={zegoConfig.appId}
-      appSign="" // Not used in token mode
-      userID={myUserId}
-      userName={myUserName}
+      appSign={zegoConfig.appSign}
+      userID={zegoUserId(user.id)}
+      userName={zegoUserName(user.nickname)}
       callID={roomId}
-      token={token}
-      scenario={{ mode: "One-on-One Voice Call" }}
       config={{
-        // Prebuilt UI config — the important bits
+        ...ONE_ON_ONE_VOICE_CALL_CONFIG,
         turnOnCameraWhenJoining: false,
         turnOnMicrophoneWhenJoining: true,
         useSpeakerWhenJoining: true,
-        showMyCameraToggleButton: false,
-        showAudioVideoSettingsButton: false,
-        showScreenSharingButton: false,
-        showTextChat: false,
-        showUserList: false,
-        showLayoutButton: false,
-        showSwitchCameraButton: false,
-        showSwitchAudioOutputButton: true,
-        showMinimizingButton: false,
-        showLeaveButton: true,
-      }}
-      onCallEnd={() => {
-        console.log("[zego] onCallEnd fired");
-        handleEnd();
-      }}
-      onLeaveRoom={() => {
-        console.log("[zego] onLeaveRoom fired");
-        handleEnd();
-      }}
-      onUserLeave={(users: any[]) => {
-        console.log("[zego] onUserLeave:", users);
-        // When the peer leaves, ZEGOCLOUD fires this. We end the call.
-        if (users && users.length > 0) {
-          handleEnd();
-        }
+        bottomMenuBarConfig: {
+          ...ONE_ON_ONE_VOICE_CALL_CONFIG.bottomMenuBarConfig,
+          buttons: [
+            ZegoMenuBarButtonName.toggleMicrophoneButton,
+            ZegoMenuBarButtonName.switchAudioOutputButton,
+            ZegoMenuBarButtonName.hangUpButton,
+          ],
+          maxCount: 3,
+        },
+        onCallEnd: (callID: string, reason: any, duration: number) => {
+          console.log("[zego] onCallEnd fired", { callID, reason, duration });
+          handleEnd("onCallEnd");
+        },
+        onHangUp: () => {
+          console.log("[zego] onHangUp fired");
+          handleEnd("onHangUp");
+        },
+        onOnlySelfInRoom: () => {
+          console.log("[zego] onOnlySelfInRoom fired");
+          handleEnd("onOnlySelfInRoom");
+        },
       }}
     />
   );

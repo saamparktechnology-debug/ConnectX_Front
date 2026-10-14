@@ -1,3 +1,4 @@
+// src/app/call/active.tsx
 import { callsApi } from "@/api/calls";
 import { useCallStore } from "@/features/calls/callStore";
 import { useCallSocketEvents } from "@/features/calls/useCallSocketEvents";
@@ -5,7 +6,7 @@ import { ZegoCallRoom } from "@/features/calls/ZegoCallRoom";
 import { showToast } from "@/lib/toast";
 import { useTheme } from "@/theme";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import { ActivityIndicator, View } from "react-native";
 
 export default function ActiveCallScreen() {
@@ -29,36 +30,51 @@ export default function ActiveCallScreen() {
     setActive();
   }, [setActive]);
 
-  const finalizeCall = async (
-    reason: "user_ended" | "network_drop" = "user_ended",
-  ) => {
-    if (endedRef.current) return;
-    endedRef.current = true;
+  const finalizeCall = useCallback(
+    async (reason: "user_ended" | "network_drop" = "user_ended") => {
+      if (endedRef.current) return;
+      endedRef.current = true;
 
-    try {
-      const result = await callsApi.end(params.sessionUuid, reason);
-      console.log("[call] ended:", result);
-    } catch (err) {
-      console.log("[call] end error:", err);
-    }
+      try {
+        const result = await callsApi.end(params.sessionUuid, reason);
+        console.log("[call] ended:", result);
+      } catch (err) {
+        console.log("[call] end error:", err);
+      }
 
-    clear();
+      clear();
 
-    if (call?.role === "caller") {
-      router.replace("/rating/pending");
-    } else {
-      router.replace("/(tabs)/home");
-    }
-  };
+      if (call?.role === "caller") {
+        router.replace("/rating/pending");
+      } else {
+        router.replace("/(tabs)/home");
+      }
+    },
+    [params.sessionUuid, call?.role, clear, router],
+  );
 
-  // Socket fallback in case ZEGOCLOUD's own callback doesn't fire
+  // Safety net: finalize on unmount if nothing else did.
+  useEffect(() => {
+    return () => {
+      if (!endedRef.current) {
+        endedRef.current = true;
+        callsApi.end(params.sessionUuid, "user_ended").catch(() => {});
+        clear();
+      }
+    };
+  }, [params.sessionUuid, clear]);
+
+  // Socket fallback: peer hung up.
   useEffect(() => {
     if (!socketEvent || socketEvent.type !== "ended") return;
     if (endedRef.current) return;
     showToast("Call ended by other party", "warning");
     finalizeCall("network_drop");
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [socketEvent]);
+  }, [socketEvent, finalizeCall]);
+
+  const handleCallEnded = useCallback(() => {
+    finalizeCall("user_ended");
+  }, [finalizeCall]);
 
   if (!params.sessionUuid || !params.roomId || !params.token) {
     return (
@@ -70,7 +86,7 @@ export default function ActiveCallScreen() {
           backgroundColor: colors.bg,
         }}
       >
-        <ActivityIndicator size="large" color={colors.rose} />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -82,9 +98,7 @@ export default function ActiveCallScreen() {
         roomId={params.roomId}
         token={params.token}
         peerNickname={call?.peerNickname ?? params.peerNickname ?? "Companion"}
-        onCallEnded={() => {
-          finalizeCall("user_ended");
-        }}
+        onCallEnded={handleCallEnded}
       />
     </View>
   );

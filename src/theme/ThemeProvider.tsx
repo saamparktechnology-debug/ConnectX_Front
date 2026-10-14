@@ -24,7 +24,7 @@ type ThemeContextValue = {
   setMode: (m: ThemeMode) => void;
 };
 
-const STORAGE_KEY = "@connectx24/theme-mode";
+const STORAGE_KEY = "@connectx/theme-mode";
 
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 

@@ -226,7 +226,7 @@ export default function ProfileScreen() {
         />
         <MenuRow
           icon="star-outline"
-          label="Love Connecto? Rate us"
+          label="Love Connect? Rate us"
           iconColor="#FBBF24"
           onPress={() => {}}
         />

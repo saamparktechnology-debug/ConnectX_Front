@@ -2,7 +2,7 @@
 import * as SecureStore from "expo-secure-store";
 import { Platform } from "react-native";
 
-const DEVICE_ID_KEY = "connectx24_device_id";
+const DEVICE_ID_KEY = "connectx_device_id";
 
 export async function getOrCreateDeviceId(): Promise<string> {
   try {

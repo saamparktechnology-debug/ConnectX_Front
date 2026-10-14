@@ -13,10 +13,10 @@ export default function TermsScreen() {
         </Text>
         <Text variant="body" color="textSecondary" style={{ lineHeight: 24 }}>
           {/* Replace with real content before launch */}
-          These Terms of Service govern your use of connectx24. By using the app
+          These Terms of Service govern your use of connect4. By using the app
           you agree to comply with all applicable laws and to treat other users
           with respect.{"\n\n"}
-          You must be 18 years or older to use connectx24.{"\n\n"}
+          You must be 18 years or older to use connectx.{"\n\n"}
           Voice recordings, when submitted for verification, are used solely for
           identity confirmation and are stored securely.{"\n\n"}
           Content that violates our community guidelines may result in account

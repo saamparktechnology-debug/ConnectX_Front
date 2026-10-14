@@ -21,7 +21,7 @@ export const VOICE_PHRASES: Record<string, string> = {
 धन्यवाद, मुझे आपकी स्वीकृति का इंतज़ार है।`,
 
   // ─── English ───────────────────────────────────────────────────────
-  en: `Hello, my name is registered on connectx24.
+  en: `Hello, my name is registered on connectx.
 I am here to verify my identity on this platform.
 This is my real voice and I am recording it honestly.
 I speak English clearly and I am proud of my language.
@@ -122,7 +122,7 @@ Thank you, I look forward to your approval.`,
  * Admin will still hear the user — this keeps onboarding unblocked.
  */
 export const VOICE_PHRASE_FALLBACK =
-  "Hello, my name is registered on connectx24. " +
+  "Hello, my name is registered on connectx. " +
   "I am here to verify my identity on this platform. " +
   "This is my real voice and I am recording it honestly. " +
   "I speak clearly and I am proud of my language. " +

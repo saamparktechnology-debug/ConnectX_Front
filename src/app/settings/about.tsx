@@ -13,7 +13,7 @@ export default function AboutScreen() {
         </Text>
 
         <Card>
-          <Text variant="h3">connectx24</Text>
+          <Text variant="h3">connectx</Text>
           <Text
             variant="body"
             color="textSecondary"

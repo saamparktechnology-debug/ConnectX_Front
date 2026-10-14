@@ -1,5 +1,4 @@
 // LOGIC PRESERVED: same token names (rose, primary, etc.) so no other file breaks.
-// VISUAL CHANGES: swapped Rosewood Indigo for Connecto Blue palette, added chipActiveStart/End, added gold.
 
 export type ThemeColors = {
   bg: string;

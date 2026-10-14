@@ -123,45 +123,52 @@ export default function CallsScreen() {
         </View>
       </View>
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ gap: spacing.sm, paddingVertical: spacing.sm }}
-        style={{ maxHeight: 52, marginBottom: spacing.sm }}
-      >
-        {FILTERS.map((f) => {
-          const active = filter === f.key;
-          return (
-            <Pressable
-              key={f.key}
-              onPress={() => setFilter(f.key)}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                paddingHorizontal: spacing.md,
-                paddingVertical: spacing.sm,
-                borderRadius: radius.full,
-                borderWidth: 1,
-                borderColor: active ? colors.primary : colors.border,
-                backgroundColor: active ? colors.primary : colors.surface,
-              }}
-            >
-              <Ionicons
-                name={f.icon}
-                size={14}
-                color={active ? "#FFFFFF" : colors.textSecondary}
-              />
-              <Text
-                variant="caption"
-                color={active ? "textOnPrimary" : "textSecondary"}
-                style={{ marginLeft: 4 }}
+      {/* Filter chips — fixed-height wrapper so they don't get squeezed */}
+      <View style={{ height: 44, marginVertical: spacing.sm }}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{
+            gap: spacing.sm,
+            paddingHorizontal: 0,
+            alignItems: "center",
+          }}
+          style={{ flexGrow: 0 }}
+        >
+          {FILTERS.map((f) => {
+            const active = filter === f.key;
+            return (
+              <Pressable
+                key={f.key}
+                onPress={() => setFilter(f.key)}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  height: 36,
+                  paddingHorizontal: spacing.md,
+                  borderRadius: radius.full,
+                  borderWidth: 1,
+                  borderColor: active ? colors.primary : colors.border,
+                  backgroundColor: active ? colors.primary : colors.surface,
+                }}
               >
-                {f.label}
-              </Text>
-            </Pressable>
-          );
-        })}
-      </ScrollView>
+                <Ionicons
+                  name={f.icon}
+                  size={14}
+                  color={active ? "#FFFFFF" : colors.textSecondary}
+                />
+                <Text
+                  variant="caption"
+                  color={active ? "textOnPrimary" : "textSecondary"}
+                  style={{ marginLeft: 4 }}
+                >
+                  {f.label}
+                </Text>
+              </Pressable>
+            );
+          })}
+        </ScrollView>
+      </View>
 
       {isLoading ? (
         <View style={{ paddingTop: spacing["3xl"], alignItems: "center" }}>

@@ -1,5 +1,5 @@
 // LOGIC PRESERVED: same exported tokens (spacing, radius, typography, shadows).
-// VISUAL CHANGES: slightly bolder headings matching the Connecto look.
+// VISUAL CHANGES: slightly bolder headings matching the ConnectX look.
 
 export const spacing = {
   xs: 4,

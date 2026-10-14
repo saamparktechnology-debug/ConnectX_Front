@@ -21,6 +21,8 @@ export type StoredUser = {
   avatarUrl?: string | null;
   onboardingCompleted?: boolean;
   primaryLanguage?: string | null;
+  termsAcceptedAt?: string | null;
+  channelsAcknowledgedAt?: string | null;
 };
 
 const storage = {

@@ -1,5 +1,3 @@
-// src/app/(onboarding)/_layout.tsx
-
 import { Stack } from "expo-router";
 
 export default function OnboardingLayout() {
@@ -10,6 +8,8 @@ export default function OnboardingLayout() {
       <Stack.Screen name="profile" />
       <Stack.Screen name="language" />
       <Stack.Screen name="voice" />
+      <Stack.Screen name="terms" />
+      <Stack.Screen name="channels" />
     </Stack>
   );
 }

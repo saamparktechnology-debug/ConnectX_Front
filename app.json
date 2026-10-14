@@ -1,33 +1,43 @@
 {
   "expo": {
-    "name": "Connectx24",
-    "slug": "Connectx24",
+    "name": "ConnectX",
+    "slug": "ConnectX",
     "version": "1.0.0",
     "orientation": "portrait",
-    "scheme": "connectx24",
+    "scheme": "connectx",
     "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
       "backgroundColor": "#090D16"
     },
-    "userInterfaceStyle": "automatic",
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "icon": "./assets/icon.png",
       "supportsTablet": false,
-      "bundleIdentifier": "com.connectx24.app",
+      "bundleIdentifier": "com.ConnectX.app",
       "infoPlist": {
-        "NSMicrophoneUsageDescription": "connectx24 needs microphone access for voice calls and voice verification.",
-        "UIBackgroundModes": ["audio", "voip"]
+        "NSMicrophoneUsageDescription": "Connect24x needs microphone access for voice calls and voice verification.",
+        "UIBackgroundModes": ["audio", "voip", "remote-notification"]
       }
     },
     "android": {
+      "package": "com.ConnectX",
+      "predictiveBackGestureEnabled": false,
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#090D16"
       },
-      "predictiveBackGestureEnabled": false,
-      "package": "com.connectx24"
+      "permissions": [
+        "RECORD_AUDIO",
+        "MODIFY_AUDIO_SETTINGS",
+        "FOREGROUND_SERVICE",
+        "WAKE_LOCK",
+        "POST_NOTIFICATIONS",
+        "VIBRATE",
+        "USE_FULL_SCREEN_INTENT"
+      ]
     },
     "web": {
       "output": "static",
@@ -44,6 +54,12 @@
         }
       ],
       "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          "sounds": ["./assets/ringtone.wav"]
+        }
+      ],
       "expo-audio"
     ],
     "experiments": {

@@ -174,7 +174,7 @@ export default function VoiceVerificationScreen() {
 
       showToast("Verification submitted for review", "success");
 
-      router.replace("/(tabs)/home");
+      router.replace("/(onboarding)/terms" as never);
     } catch (err) {
       console.log("[voice] submit error", err);
       showToast(userMessage(err), "error");

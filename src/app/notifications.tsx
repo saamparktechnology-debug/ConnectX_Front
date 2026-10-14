@@ -1,4 +1,4 @@
-import { post } from "@/api/client";
+// src/app/notifications.tsx
 import {
   useMarkNotificationsRead,
   useNotifications,
@@ -7,6 +7,7 @@ import { timeAgo } from "@/lib/format";
 import { useTheme } from "@/theme";
 import { Avatar, Card, Screen, Text } from "@/ui";
 import { Ionicons } from "@expo/vector-icons";
+import { useMutation } from "@tanstack/react-query";
 import { useFocusEffect, useRouter } from "expo-router";
 import { useCallback } from "react";
 import { ActivityIndicator, FlatList, Pressable, View } from "react-native";
@@ -16,6 +17,14 @@ export default function NotificationsScreen() {
   const { colors, spacing } = useTheme();
   const { data, isLoading, refetch, isRefetching } = useNotifications();
   const markRead = useMarkNotificationsRead();
+
+  const clearAll = useMutation({
+    mutationFn: async () => {
+      const { post } = await import("@/api/client");
+      return post("/users/me/notifications/clear", {});
+    },
+    onSuccess: () => refetch(),
+  });
 
   useFocusEffect(
     useCallback(() => {
@@ -47,19 +56,16 @@ export default function NotificationsScreen() {
         <Pressable onPress={handleBack} hitSlop={8}>
           <Ionicons name="chevron-back" size={26} color={colors.textPrimary} />
         </Pressable>
-        <Text style={{ fontSize: 20, fontWeight: "800", marginLeft: 12 }}>
+        <Text
+          style={{ fontSize: 20, fontWeight: "800", marginLeft: 12, flex: 1 }}
+        >
           Notifications
         </Text>
-        <Pressable
-          onPress={async () => {
-            await post("/users/me/notifications/clear", {});
-            refetch();
-          }}
-          hitSlop={8}
-          style={{ marginLeft: "auto" }}
-        >
-          <Ionicons name="trash-outline" size={22} color={colors.danger} />
-        </Pressable>
+        {notifications.length > 0 ? (
+          <Pressable onPress={() => clearAll.mutate()} hitSlop={8}>
+            <Ionicons name="trash-outline" size={22} color={colors.danger} />
+          </Pressable>
+        ) : null}
       </View>
 
       {isLoading ? (

@@ -1,4 +1,3 @@
-// src/api/auth.ts
 import { post } from "./client";
 
 export type SendOtpResponse = { debugOtp?: string };
@@ -7,25 +6,46 @@ export type VerifyOtpInput = {
   phone: string;
   otp: string;
   deviceId: string;
-  gender?: "male" | "female";
-  nickname?: string;
 };
 
-export type VerifyOtpResponse = {
+export type VerifyOtpResponse =
+  | {
+      onboardingRequired: true;
+      onboardingToken: string;
+      accessToken: null;
+      refreshToken: null;
+      user: null;
+    }
+  | {
+      onboardingRequired: false;
+      onboardingToken: null;
+      accessToken: string;
+      refreshToken: string;
+      user: {
+        id: number;
+        uuid: string;
+        publicId: string | null;
+        phone: string;
+        gender: "male" | "female";
+        nickname: string;
+        avatarUrl: string | null;
+        verificationStatus: "unverified" | "pending" | "approved" | "rejected";
+        walletBalance: string;
+        isOnline: boolean;
+        onboardingCompleted: boolean;
+        primaryLanguage: string | null;
+        birthYear: number | null;
+        termsAcceptedAt: string | null;
+        channelsAcknowledgedAt: string | null;
+      };
+    };
+
+export type CompleteSignupResponse = {
   accessToken: string;
   refreshToken: string;
-  isNewUser: boolean;
-  user: {
-    id: number;
-    uuid: string;
-    publicId: string | null;
-    phone: string;
-    gender: "male" | "female";
-    nickname: string;
-    verificationStatus: "unverified" | "pending" | "approved" | "rejected";
-    walletBalance: string;
-    isOnline: boolean;
-  };
+  user: NonNullable<
+    Extract<VerifyOtpResponse, { onboardingRequired: false }>["user"]
+  >;
 };
 
 export const authApi = {
@@ -35,6 +55,16 @@ export const authApi = {
 
   verifyOtp(input: VerifyOtpInput) {
     return post<VerifyOtpResponse>("/auth/otp/verify", input);
+  },
+
+  completeSignup(input: {
+    onboardingToken: string;
+    gender: "male" | "female";
+    nickname: string;
+    birthYear?: number | null;
+    avatarUrl?: string | null;
+  }) {
+    return post<CompleteSignupResponse>("/users/onboarding/create", input);
   },
 
   logout(refreshToken: string) {

@@ -1,4 +1,3 @@
-// src/features/calls/IncomingCallOverlay.tsx
 import { callsApi } from "@/api/calls";
 import { userMessage } from "@/api/errors";
 import { showToast } from "@/lib/toast";
@@ -9,6 +8,7 @@ import { useRouter } from "expo-router";
 import { useEffect, useState } from "react";
 import { Modal, Pressable, StyleSheet, View } from "react-native";
 import { useCallStore } from "./callStore";
+import { useIncomingRingtone } from "./useIncomingRingtone";
 
 export function IncomingCallOverlay() {
   const router = useRouter();
@@ -21,12 +21,12 @@ export function IncomingCallOverlay() {
   const [secondsLeft, setSecondsLeft] = useState(60);
   const [busy, setBusy] = useState(false);
 
-  // Reset countdown on new incoming call
+  useIncomingRingtone();
+
   useEffect(() => {
     if (phase === "incoming") setSecondsLeft(60);
   }, [phase, call?.sessionUuid]);
 
-  // Countdown + auto-timeout
   useEffect(() => {
     if (phase !== "incoming" || !call) return;
     const t = setInterval(() => {

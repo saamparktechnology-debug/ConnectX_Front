@@ -4,6 +4,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { OfflineBanner } from "@/components/OfflineBanner";
 import { IncomingCallOverlay } from "@/features/calls/IncomingCallOverlay";
 import { useCallSocket } from "@/features/calls/useCallSocket";
+import { registerForPush } from "@/features/notifications/pushService";
 import { ThemeProvider, useTheme } from "@/theme";
 import { LoadingOverlay, ToastProvider } from "@/ui";
 import {
@@ -12,6 +13,7 @@ import {
   useQuery,
 } from "@tanstack/react-query";
 import * as Linking from "expo-linking";
+import * as Notifications from "expo-notifications";
 import { Stack, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
@@ -40,9 +42,37 @@ function BootGate() {
     hydrate();
   }, [hydrate]);
 
+  // Register push token when authenticated
+  useEffect(() => {
+    if (status === "authenticated") {
+      registerForPush().catch((err) => {
+        console.log("[push] register failed", err);
+      });
+    }
+  }, [status]);
+
+  // Notification tap → route
+  useEffect(() => {
+    const sub = Notifications.addNotificationResponseReceivedListener(
+      (response) => {
+        const data = response.notification.request.content.data as any;
+        console.log("[push] tapped", data);
+        if (
+          data?.type === "call:incoming" ||
+          data?.type === "call:random-incoming"
+        ) {
+          // Bring user to home; incoming modal will appear via socket
+          router.push("/(tabs)/home");
+        }
+      },
+    );
+    return () => sub.remove();
+  }, [router]);
+
   // ── Deep link handling ─────────────────────────────────────────
   useEffect(() => {
     const handleUrl = async (url: string) => {
+      if (useAuthStore.getState().status !== "authenticated") return;
       try {
         const parsed = Linking.parse(url);
         const { hostname, path, queryParams } = parsed;
@@ -53,7 +83,6 @@ function BootGate() {
           queryParams,
         });
 
-        // connectx24://call/<sessionUuid>
         if (
           hostname === "call" &&
           typeof path === "string" &&
@@ -61,27 +90,18 @@ function BootGate() {
         ) {
           const sessionUuid = path.replace(/^\//, "");
           if (sessionUuid) {
-            router.push({
-              pathname: "/call/active",
-              params: { sessionUuid },
-            });
+            router.push({ pathname: "/call/active", params: { sessionUuid } });
             return;
           }
         }
-
-        // connectx24://verification
         if (hostname === "verification") {
           router.push("/verification/status" as never);
           return;
         }
-
-        // connectx24://settings
         if (hostname === "settings") {
           router.push("/settings" as never);
           return;
         }
-
-        // connectx24://recharge/success?rechargeUuid=...
         if (hostname === "recharge" && path === "/success") {
           const rechargeUuid =
             typeof queryParams?.rechargeUuid === "string"
@@ -93,35 +113,32 @@ function BootGate() {
           });
           return;
         }
-
-        // connectx24://profile
         if (hostname === "profile") {
           router.push("/(tabs)/profile" as never);
           return;
         }
-
-        // Unknown deep link → log only
         console.log("[deeplink] unhandled:", { hostname, path });
       } catch (err) {
         console.log("[deeplink] parse error:", err);
       }
     };
 
-    // Cold start
-    Linking.getInitialURL()
-      .then((url) => {
-        if (url) handleUrl(url);
-      })
-      .catch(() => {
-        /* non-fatal */
-      });
+    const t = setTimeout(() => {
+      Linking.getInitialURL()
+        .then((url) => {
+          if (url) handleUrl(url);
+        })
+        .catch(() => {});
+    }, 800);
 
-    // Warm start (app in background)
-    const sub = Linking.addEventListener("url", (event) => {
-      handleUrl(event.url);
-    });
+    const sub = Linking.addEventListener("url", (event) =>
+      handleUrl(event.url),
+    );
 
-    return () => sub.remove();
+    return () => {
+      clearTimeout(t);
+      sub.remove();
+    };
   }, [router]);
   // ───────────────────────────────────────────────────────────────
 
@@ -166,7 +183,7 @@ function BootGate() {
     return (
       <>
         <StatusBar style={activeScheme === "dark" ? "light" : "dark"} />
-        <LoadingOverlay visible message="Loading connectx24…" />
+        <LoadingOverlay visible message="Loading Connect24x…" />
       </>
     );
   }
@@ -175,14 +192,13 @@ function BootGate() {
     <>
       <StatusBar style={activeScheme === "dark" ? "light" : "dark"} />
       <Stack
+        initialRouteName="index"
         screenOptions={{
           headerShown: false,
           animation: "slide_from_right",
           contentStyle: { backgroundColor: "transparent" },
         }}
-      >
-        <Stack.Screen name="notifications" options={{ presentation: "card" }} />
-      </Stack>
+      />
       <IncomingCallOverlay />
     </>
   );
@@ -192,16 +208,16 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <ErrorBoundary>
-          <QueryClientProvider client={queryClient}>
-            <ThemeProvider>
+        <QueryClientProvider client={queryClient}>
+          <ThemeProvider>
+            <ErrorBoundary>
               <ToastProvider>
                 <BootGate />
                 <OfflineBanner />
               </ToastProvider>
-            </ThemeProvider>
-          </QueryClientProvider>
-        </ErrorBoundary>
+            </ErrorBoundary>
+          </ThemeProvider>
+        </QueryClientProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

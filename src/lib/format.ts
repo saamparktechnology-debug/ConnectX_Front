@@ -26,16 +26,18 @@ export function maskPhone(e164: string): string {
 export function timeAgo(timestamp: string | null | undefined): string {
   if (!timestamp) return "";
 
-  // MySQL returns 'YYYY-MM-DD HH:MM:SS.mmm' — JS Date needs ISO format
-  const normalized = timestamp.includes("T")
-    ? timestamp
-    : timestamp.replace(" ", "T");
+  // MySQL DATETIME is stored as UTC but returned without a timezone marker.
+  // Force UTC parsing so '2026-10-13 08:00:00' → Date in UTC, not local.
+  const normalized =
+    timestamp.includes("T") || timestamp.includes("Z")
+      ? timestamp
+      : timestamp.replace(" ", "T") + "Z";
 
   const then = new Date(normalized).getTime();
   if (!Number.isFinite(then)) return "";
 
   const now = Date.now();
-  const diff = Math.max(0, now - then) / 1000; // seconds
+  const diff = Math.max(0, now - then) / 1000;
 
   if (diff < 60) return "just now";
   if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;

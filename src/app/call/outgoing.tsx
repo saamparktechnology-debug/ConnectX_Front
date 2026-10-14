@@ -1,3 +1,4 @@
+// src/app/call/outgoing.tsx
 import { callsApi } from "@/api/calls";
 import { userMessage } from "@/api/errors";
 import { useCallStore } from "@/features/calls/callStore";
@@ -6,7 +7,7 @@ import { showToast } from "@/lib/toast";
 import { useTheme } from "@/theme";
 import { Avatar, Button, Screen, Text } from "@/ui";
 import { useRouter } from "expo-router";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { View } from "react-native";
 
 const RING_TIMEOUT_SEC = 60;
@@ -21,6 +22,31 @@ export default function OutgoingCallScreen() {
 
   const [secondsLeft, setSecondsLeft] = useState(RING_TIMEOUT_SEC);
 
+  const transitionToActive = useCallback(async () => {
+    if (!call || endedRef.current) return;
+    endedRef.current = true;
+    try {
+      // Reuse token if already minted on initiate, otherwise fetch fresh token
+      const token =
+        call.token || (await callsApi.getRoomToken(call.sessionUuid)).token;
+      useCallStore.getState().markAccepted(token);
+      router.replace({
+        pathname: "/call/active",
+        params: {
+          sessionUuid: call.sessionUuid,
+          roomId: call.roomId,
+          token,
+          peerNickname: call.peerNickname,
+        },
+      });
+    } catch (err) {
+      showToast(userMessage(err), "error");
+      clear();
+      router.back();
+    }
+  }, [call, clear, router]);
+
+  // 1. Countdown timer
   useEffect(() => {
     const t = setInterval(() => {
       setSecondsLeft((s) => {
@@ -38,30 +64,12 @@ export default function OutgoingCallScreen() {
     return () => clearInterval(t);
   }, [clear, router, call?.sessionUuid]);
 
+  // 2. Primary: Socket events
   useEffect(() => {
     if (!event || !call || endedRef.current) return;
 
     if (event.type === "accepted") {
-      endedRef.current = true;
-      (async () => {
-        try {
-          const tokenData = await callsApi.getRoomToken(call.sessionUuid);
-          useCallStore.getState().markAccepted(tokenData.token);
-          router.replace({
-            pathname: "/call/active",
-            params: {
-              sessionUuid: call.sessionUuid,
-              roomId: call.roomId,
-              token: tokenData.token,
-              peerNickname: call.peerNickname,
-            },
-          });
-        } catch (err) {
-          showToast(userMessage(err), "error");
-          clear();
-          router.back();
-        }
-      })();
+      transitionToActive();
       return;
     }
 
@@ -79,7 +87,42 @@ export default function OutgoingCallScreen() {
       clear();
       router.back();
     }
-  }, [event, call, clear, router]);
+  }, [event, call, clear, router, transitionToActive]);
+
+  // 3. Fallback: Poll call status every 2s in case socket reconnects mid-ring
+  useEffect(() => {
+    if (!call?.sessionUuid) return;
+
+    const poll = setInterval(async () => {
+      if (endedRef.current) return;
+      try {
+        const statusData = await callsApi.getStatus(call.sessionUuid);
+        if (endedRef.current) return;
+
+        if (statusData.status === "accepted") {
+          transitionToActive();
+        } else if (statusData.status === "rejected") {
+          endedRef.current = true;
+          showToast("Call was declined", "warning");
+          clear();
+          router.back();
+        } else if (
+          ["missed", "cancelled", "completed", "failed"].includes(
+            statusData.status,
+          )
+        ) {
+          endedRef.current = true;
+          showToast("Call ended", "warning");
+          clear();
+          router.back();
+        }
+      } catch {
+        // Ignore transient network errors during polling
+      }
+    }, 2000);
+
+    return () => clearInterval(poll);
+  }, [call?.sessionUuid, clear, router, transitionToActive]);
 
   const handleCancel = async () => {
     if (!call || endedRef.current) return;

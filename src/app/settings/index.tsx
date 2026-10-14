@@ -1,3 +1,4 @@
+// src/app/settings/index.tsx
 import { userMessage } from "@/api/errors";
 import { usersApi } from "@/api/users";
 import { useAuthStore } from "@/auth/authStore";
@@ -155,7 +156,7 @@ export default function SettingsScreen() {
           />
           <View style={[styles.divider, { backgroundColor: colors.divider }]} />
           <MenuRow
-            label="About connectx24"
+            label="About connectx"
             icon="information-circle-outline"
             onPress={() => router.push("/settings/about" as never)}
           />
@@ -197,7 +198,7 @@ export default function SettingsScreen() {
           align="center"
           style={{ marginTop: spacing.xl }}
         >
-          connectx24 v1.0.0
+          connectx v1.0.0
         </Text>
       </ScrollView>
 
@@ -292,7 +293,7 @@ export default function SettingsScreen() {
               color="textSecondary"
               style={{ marginTop: spacing.sm, textAlign: "center" }}
             >
-              You will need to sign in again to use connectx24.
+              You will need to sign in again to use connectx.
             </Text>
 
             <View
