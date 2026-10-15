@@ -48,7 +48,7 @@ export function CallHistoryRow({ call, onPress, showNotify }: Props) {
   const seconds = call.durationSeconds % 60;
   const durationStr = `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 
-  // ─── Notify mutation (female → male) ──────────────────────────────
+  // Notify mutation (female → male callers)
   const notify = useMutation({
     mutationFn: async () => {
       const { post } = await import("@/api/client");
@@ -65,7 +65,7 @@ export function CallHistoryRow({ call, onPress, showNotify }: Props) {
     onError: (err) => showToast(userMessage(err), "error"),
   });
 
-  // ─── Call-back mutation (male → female) ───────────────────────────
+  // Call-back mutation (male → female)
   const callBack = useMutation({
     mutationFn: () => callsApi.initiate(call.peerUuid),
     onSuccess: (data) => {
@@ -99,6 +99,7 @@ export function CallHistoryRow({ call, onPress, showNotify }: Props) {
         },
       ]}
     >
+      {/* Avatar + presence dot */}
       <View>
         <Avatar uri={call.peerAvatar} name={call.peerNickname} size={48} />
         {call.peerIsOnline ? (
@@ -114,6 +115,7 @@ export function CallHistoryRow({ call, onPress, showNotify }: Props) {
         ) : null}
       </View>
 
+      {/* Main info */}
       <View style={{ flex: 1, marginLeft: spacing.md }}>
         <Text
           variant="bodyStrong"
@@ -152,6 +154,7 @@ export function CallHistoryRow({ call, onPress, showNotify }: Props) {
         </View>
       </View>
 
+      {/* Actions */}
       <View
         style={{
           flexDirection: "row",
