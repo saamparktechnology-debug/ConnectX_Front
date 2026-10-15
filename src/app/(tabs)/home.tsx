@@ -20,6 +20,8 @@ import { useCallStore } from "@/features/calls/callStore";
 import { CompanionCard } from "@/features/discovery/CompanionCard";
 import { useDiscovery } from "@/features/discovery/useDiscovery";
 import { useNotifications } from "@/features/notifications/useNotifications";
+import { TargetCard } from "@/features/targets/TargetCard";
+import { useTarget } from "@/features/targets/useTarget";
 import { formatMoney } from "@/lib/format";
 import { showToast } from "@/lib/toast";
 import { useTheme } from "@/theme";
@@ -518,6 +520,7 @@ function FemaleHome() {
   const user = useAuthStore((s) => s.user);
   const updateUser = useAuthStore((s) => s.updateUser);
   const [busy, setBusy] = useState(false);
+  const { data: target } = useTarget();
 
   useFocusEffect(
     useCallback(() => {
@@ -581,6 +584,7 @@ function FemaleHome() {
         showsVerticalScrollIndicator={false}
       >
         {/* Greeting + verification status */}
+        {/* Greeting + verification status */}
         <View style={{ paddingHorizontal: 16, marginBottom: spacing.md }}>
           <Text variant="h2">Hi, {user?.nickname}</Text>
           <Text
@@ -594,6 +598,13 @@ function FemaleHome() {
             {status === "unverified" && "Please complete verification"}
           </Text>
         </View>
+
+        {/* Monthly target */}
+        {target ? (
+          <View style={{ paddingHorizontal: 16 }}>
+            <TargetCard target={target} />
+          </View>
+        ) : null}
 
         {/* Pending banner */}
         {status === "pending" ? (

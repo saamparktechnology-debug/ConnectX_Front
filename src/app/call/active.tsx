@@ -5,6 +5,8 @@ import { useCallSocketEvents } from "@/features/calls/useCallSocketEvents";
 import { ZegoCallRoom } from "@/features/calls/ZegoCallRoom";
 import { showToast } from "@/lib/toast";
 import { useTheme } from "@/theme";
+import { Text } from "@/ui";
+import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useCallback, useEffect, useRef } from "react";
 import { ActivityIndicator, View } from "react-native";
@@ -100,6 +102,44 @@ export default function ActiveCallScreen() {
         peerNickname={call?.peerNickname ?? params.peerNickname ?? "Companion"}
         onCallEnded={handleCallEnded}
       />
+      {/* Non-blocking DND hint — hidden from ZEGO's UI layering */}
+      <View
+        pointerEvents="none"
+        style={{
+          position: "absolute",
+          bottom: 90,
+          left: 0,
+          right: 0,
+          alignItems: "center",
+        }}
+      >
+        <View
+          style={{
+            backgroundColor: "rgba(0,0,0,0.55)",
+            paddingHorizontal: 12,
+            paddingVertical: 6,
+            borderRadius: 999,
+            flexDirection: "row",
+            alignItems: "center",
+          }}
+        >
+          <Ionicons
+            name="notifications-off-outline"
+            size={12}
+            color="#FFFFFF"
+          />
+          <Text
+            style={{
+              color: "#FFFFFF",
+              fontSize: 11,
+              marginLeft: 6,
+              fontWeight: "600",
+            }}
+          >
+            Tip: Enable Do Not Disturb for a quieter call
+          </Text>
+        </View>
+      </View>
     </View>
   );
 }

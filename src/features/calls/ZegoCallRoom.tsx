@@ -1,4 +1,3 @@
-// src/features/calls/ZegoCallRoom.tsx
 import { useAuthStore } from "@/auth/authStore";
 import { useTheme } from "@/theme";
 import { Text } from "@/ui";
@@ -7,7 +6,7 @@ import {
   ONE_ON_ONE_VOICE_CALL_CONFIG,
   ZegoMenuBarButtonName,
 } from "@zegocloud/zego-uikit-prebuilt-call-rn";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
   PermissionsAndroid,
@@ -32,7 +31,7 @@ try {
 type Props = {
   sessionUuid: string;
   roomId: string;
-  token?: string;
+  token: string;
   peerNickname: string;
   onCallEnded: () => void;
 };
@@ -40,6 +39,7 @@ type Props = {
 export function ZegoCallRoom({
   sessionUuid,
   roomId,
+  token,
   peerNickname,
   onCallEnded,
 }: Props) {
@@ -49,15 +49,12 @@ export function ZegoCallRoom({
   const [micReady, setMicReady] = useState(Platform.OS !== "android");
   const endedRef = useRef(false);
 
-  const handleEnd = useCallback(
-    (from: string) => {
-      if (endedRef.current) return;
-      endedRef.current = true;
-      console.log(`[zego] handleEnd from ${from}`);
-      onCallEnded();
-    },
-    [onCallEnded],
-  );
+  const handleEnd = (from: string) => {
+    if (endedRef.current) return;
+    endedRef.current = true;
+    console.log(`[zego] handleEnd from ${from}`);
+    onCallEnded();
+  };
 
   useEffect(() => {
     if (Platform.OS !== "android") {
@@ -84,9 +81,7 @@ export function ZegoCallRoom({
 
   useEffect(() => {
     if (!zegoConfig.isConfigured) {
-      setError(
-        `ZEGOCLOUD AppID or 64-char AppSign missing (appSign length: ${zegoConfig.appSign.length}).`,
-      );
+      setError("ZEGOCLOUD not configured.");
       return;
     }
     if (!ZegoUIKitPrebuiltCall) {
@@ -133,18 +128,25 @@ export function ZegoCallRoom({
 
   const Z = ZegoUIKitPrebuiltCall;
 
+  // Female → earpiece (hardware AEC suppresses notification chime leak).
+  // Male   → loudspeaker (comfortable, no AEC concern).
+  const isFemale = user.gender === "female";
+  const useSpeaker = !isFemale;
+
   return (
     <Z
       appID={zegoConfig.appId}
-      appSign={zegoConfig.appSign}
+      appSign=""
       userID={zegoUserId(user.id)}
       userName={zegoUserName(user.nickname)}
       callID={roomId}
+      token={token}
+      scenario={{ mode: "One-on-One Voice Call" }}
       config={{
         ...ONE_ON_ONE_VOICE_CALL_CONFIG,
         turnOnCameraWhenJoining: false,
         turnOnMicrophoneWhenJoining: true,
-        useSpeakerWhenJoining: true,
+        useSpeakerWhenJoining: useSpeaker,
         bottomMenuBarConfig: {
           ...ONE_ON_ONE_VOICE_CALL_CONFIG.bottomMenuBarConfig,
           buttons: [
@@ -154,18 +156,17 @@ export function ZegoCallRoom({
           ],
           maxCount: 3,
         },
-        onCallEnd: (callID: string, reason: any, duration: number) => {
-          console.log("[zego] onCallEnd fired", { callID, reason, duration });
-          handleEnd("onCallEnd");
-        },
-        onHangUp: () => {
-          console.log("[zego] onHangUp fired");
-          handleEnd("onHangUp");
-        },
-        onOnlySelfInRoom: () => {
-          console.log("[zego] onOnlySelfInRoom fired");
-          handleEnd("onOnlySelfInRoom");
-        },
+      }}
+      onCallEnd={(callID: string, reason: any, duration: number) => {
+        console.log("[zego] onCallEnd", callID, reason, duration);
+        handleEnd("onCallEnd");
+      }}
+      onLeaveRoom={(callID: string) => {
+        console.log("[zego] onLeaveRoom", callID);
+        handleEnd("onLeaveRoom");
+      }}
+      onUserLeave={(users: any[]) => {
+        if (users && users.length > 0) handleEnd("onUserLeave");
       }}
     />
   );

@@ -62,8 +62,11 @@ export type CallHistoryRow = {
   uuid: string;
   direction: "outgoing" | "incoming";
   peerId: number;
+  peerUuid: string;
   peerNickname: string;
   peerAvatar: string | null;
+  peerIsOnline: boolean;
+  peerIsFemale: boolean;
   startTime: string;
   endTime: string;
   durationSeconds: number;

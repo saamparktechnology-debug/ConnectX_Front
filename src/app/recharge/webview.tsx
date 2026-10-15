@@ -1,21 +1,10 @@
-// src/app/recharge/webview.tsx
 import { useTheme } from "@/theme";
 import { Text } from "@/ui";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useMemo, useState } from "react";
-import { ActivityIndicator, View } from "react-native";
-import { WebView } from "react-native-webview";
+import { ActivityIndicator, Linking, Platform, View } from "react-native";
+import { WebView, WebViewNavigation } from "react-native-webview";
 
-/**
- * PayU checkout WebView.
- *
- * Flow:
- *   1. Build a self-submitting HTML form containing all PayU params
- *   2. Load it via WebView source={{ html }}
- *   3. PayU redirects to the backend callback URL on success/failure
- *   4. Backend responds with plain text "CALLBACK_PROCESSED_SUCCESSFULLY"
- *   5. We detect that string in onNavigationStateChange and route to /success
- */
 export default function PayUWebViewScreen() {
   const router = useRouter();
   const { colors } = useTheme();
@@ -35,14 +24,19 @@ export default function PayUWebViewScreen() {
     const fields = Object.entries(payuParams)
       .map(
         ([k, v]) =>
-          `<input type="hidden" name="${escapeHtml(k)}" value="${escapeHtml(String(v))}" />`,
+          `<input type="hidden" name="${escapeHtml(k)}" value="${escapeHtml(
+            String(v),
+          )}" />`,
       )
       .join("\n");
 
     return `
       <!doctype html>
       <html>
-        <head><meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" /></head>
+        <head>
+          <meta charset="utf-8" />
+          <meta name="viewport" content="width=device-width, initial-scale=1" />
+        </head>
         <body onload="document.forms[0].submit()">
           <form method="POST" action="${escapeHtml(params.url ?? "")}">
             ${fields}
@@ -51,6 +45,44 @@ export default function PayUWebViewScreen() {
       </html>
     `;
   }, [params.url, params.paramsJson]);
+
+  const closeWithSuccess = () => {
+    router.replace({
+      pathname: "/recharge/success",
+      params: { rechargeUuid: params.rechargeUuid },
+    });
+  };
+
+  const onShouldStartLoadWithRequest = (request: WebViewNavigation) => {
+    const url = request.url ?? "";
+
+    if (url.startsWith("http://") || url.startsWith("https://")) {
+      if (
+        url.includes("/recharges/payu/callback") ||
+        url.includes("CALLBACK_PROCESSED")
+      ) {
+        closeWithSuccess();
+        return false;
+      }
+      return true;
+    }
+
+    console.log("[payu-webview] external scheme:", url);
+    Linking.openURL(url).catch((err) => {
+      console.log("[payu-webview] openURL failed", err);
+    });
+    return false;
+  };
+
+  const onNavigationStateChange = (navState: WebViewNavigation) => {
+    const url = navState.url ?? "";
+    if (
+      url.includes("/recharges/payu/callback") ||
+      url.includes("CALLBACK_PROCESSED")
+    ) {
+      closeWithSuccess();
+    }
+  };
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.bg }}>
@@ -72,32 +104,22 @@ export default function PayUWebViewScreen() {
         source={{ html }}
         onLoadStart={() => setLoading(true)}
         onLoadEnd={() => setLoading(false)}
-        onNavigationStateChange={(navState) => {
-          const url = navState.url ?? "";
-          // The backend's PayU callback returns this plain text on completion
-          if (
-            url.includes("/recharges/payu/callback") ||
-            url.includes("CALLBACK_PROCESSED")
-          ) {
-            router.replace({
-              pathname: "/recharge/success",
-              params: { rechargeUuid: params.rechargeUuid },
-            });
-          }
-        }}
+        onShouldStartLoadWithRequest={onShouldStartLoadWithRequest}
+        onNavigationStateChange={onNavigationStateChange}
         onMessage={(event) => {
-          // Some PayU flows send a postMessage instead of a nav change
           const data = event.nativeEvent.data ?? "";
+          console.log("[payu-webview] postMessage:", data);
           if (data.includes("CALLBACK_PROCESSED_SUCCESSFULLY")) {
-            router.replace({
-              pathname: "/recharge/success",
-              params: { rechargeUuid: params.rechargeUuid },
-            });
+            closeWithSuccess();
           }
         }}
         javaScriptEnabled
         domStorageEnabled
         startInLoadingState
+        allowsInlineMediaPlayback
+        mixedContentMode="always"
+        thirdPartyCookiesEnabled
+        {...(Platform.OS === "ios" ? { sharedCookiesEnabled: true } : {})}
       />
     </View>
   );

@@ -7,7 +7,7 @@ import {
 import { useEffect, useRef } from "react";
 import { useCallStore } from "./callStore";
 
-const RINGTONE = require("../../../assets/ringtone.mp3");
+const RINGTONE = require("../../../assets/ringtone.wav");
 
 export function useIncomingRingtone() {
   const phase = useCallStore((s) => s.phase);

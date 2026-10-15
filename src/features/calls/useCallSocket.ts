@@ -1,6 +1,7 @@
 // src/features/calls/useCallSocket.ts
 import { useAuthStore } from "@/auth/authStore";
 import { walletKeys } from "@/features/wallet/useBalance";
+import { showToast } from "@/lib/toast";
 import { useQueryClient } from "@tanstack/react-query";
 import { useEffect } from "react";
 import { useCallStore } from "./callStore";
@@ -124,6 +125,24 @@ export function useCallSocket() {
             if (phase === "incoming") {
               useCallStore.getState().clear();
             }
+          }),
+        );
+
+        unsubs.push(
+          await subscribe<{
+            periodYear: number;
+            periodMonth: number;
+            achievedMinutes: number;
+            prizeAmount: string;
+          }>("target:awarded", (payload) => {
+            console.log("[socket] target:awarded", payload);
+            queryClient.invalidateQueries({ queryKey: ["target", "me"] });
+            queryClient.invalidateQueries({ queryKey: ["wallet"] });
+            queryClient.invalidateQueries({ queryKey: ["me"] });
+            showToast(
+              `Target prize ₹${payload.prizeAmount} credited!`,
+              "success",
+            );
           }),
         );
       } catch (err) {

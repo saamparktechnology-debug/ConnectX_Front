@@ -37,6 +37,29 @@
         "POST_NOTIFICATIONS",
         "VIBRATE",
         "USE_FULL_SCREEN_INTENT"
+      ],
+      "queries": [
+        {
+          "scheme": "upi"
+        },
+        {
+          "scheme": "phonepe"
+        },
+        {
+          "scheme": "paytmmp"
+        },
+        {
+          "scheme": "tez"
+        },
+        {
+          "scheme": "bhim"
+        },
+        {
+          "scheme": "amazonpay"
+        },
+        {
+          "scheme": "credpay"
+        }
       ]
     },
     "web": {

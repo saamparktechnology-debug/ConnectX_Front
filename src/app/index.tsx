@@ -32,15 +32,19 @@ export default function Index() {
   if (loadingMe) return null;
   if (isMale && loadingRating) return null;
 
+  // Prefer server state over the local snapshot for anything that
+  // the signup flow may have completed after the snapshot was saved.
+  const liveOnboardingCompleted =
+    me?.onboardingCompleted ?? user.onboardingCompleted;
+  const livePrimaryLanguage = me?.primaryLanguage ?? user.primaryLanguage;
   const liveStatus = me?.verificationStatus ?? user.verificationStatus;
 
-  if (!user.onboardingCompleted) {
+  if (!liveOnboardingCompleted) {
     return <Redirect href="/(onboarding)/profile" />;
   }
 
   if (user.gender === "female") {
-    // Language must be picked before voice verification
-    if (!user.primaryLanguage) {
+    if (!livePrimaryLanguage) {
       return <Redirect href="/(onboarding)/language" />;
     }
 
