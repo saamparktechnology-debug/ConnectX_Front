@@ -145,6 +145,34 @@ export function useCallSocket() {
             );
           }),
         );
+
+        unsubs.push(
+          await subscribe<{
+            sessionUuid: string;
+            balance: string;
+            remainingSeconds: number;
+          }>("call:low-balance", (payload) => {
+            const call = useCallStore.getState().call;
+            if (!call || call.sessionUuid !== payload.sessionUuid) return;
+            showToast(
+              `Low balance: ₹${payload.balance} (${Math.floor(payload.remainingSeconds / 60)}m left)`,
+              "warning",
+            );
+          }),
+        );
+
+        unsubs.push(
+          await subscribe<{ sessionUuid: string }>(
+            "call:balance-exhausted",
+            (payload) => {
+              const call = useCallStore.getState().call;
+              if (!call || call.sessionUuid !== payload.sessionUuid) return;
+              showToast("Call ended: insufficient balance", "error");
+              // The active screen's socket subscriber will pick up the `call:ended`
+              // event that the sweeper's endCall triggers.
+            },
+          ),
+        );
       } catch (err) {
         console.log("[socket] setup failed:", err);
       }
