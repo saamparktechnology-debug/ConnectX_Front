@@ -7,11 +7,6 @@
     "scheme": "connectx",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
-    "splash": {
-      "image": "./assets/splash-icon.png",
-      "resizeMode": "contain",
-      "backgroundColor": "#090D16"
-    },
     "assetBundlePatterns": ["**/*"],
     "ios": {
       "icon": "./assets/icon.png",
@@ -33,33 +28,12 @@
         "RECORD_AUDIO",
         "MODIFY_AUDIO_SETTINGS",
         "FOREGROUND_SERVICE",
+        "FOREGROUND_SERVICE_MEDIA_PLAYBACK",
         "WAKE_LOCK",
         "POST_NOTIFICATIONS",
         "VIBRATE",
-        "USE_FULL_SCREEN_INTENT"
-      ],
-      "queries": [
-        {
-          "scheme": "upi"
-        },
-        {
-          "scheme": "phonepe"
-        },
-        {
-          "scheme": "paytmmp"
-        },
-        {
-          "scheme": "tez"
-        },
-        {
-          "scheme": "bhim"
-        },
-        {
-          "scheme": "amazonpay"
-        },
-        {
-          "scheme": "credpay"
-        }
+        "USE_FULL_SCREEN_INTENT",
+        "INTERNET"
       ]
     },
     "web": {
@@ -71,9 +45,10 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
-          "image": "./assets/images/splash-icon.png",
-          "imageWidth": 76
+          "backgroundColor": "#090D16",
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 76,
+          "resizeMode": "contain"
         }
       ],
       "expo-secure-store",
@@ -83,17 +58,44 @@
           "sounds": ["./assets/ringtone.wav"]
         }
       ],
-      "expo-audio"
+      "expo-audio",
+      "expo-font",
+      "expo-image",
+      "expo-status-bar",
+      "expo-web-browser",
+      "expo-asset",
+      "./plugins/withZegoBuildConfig",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "queries": [
+              { "scheme": "upi" },
+              { "scheme": "phonepe" },
+              { "scheme": "paytmmp" },
+              { "scheme": "tez" },
+              { "scheme": "bhim" },
+              { "scheme": "amazonpay" },
+              { "scheme": "credpay" }
+            ]
+          }
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
     },
     "extra": {
-      "router": {},
+      "router": {
+        "asyncRoutes": {
+          "web": true
+        }
+      },
       "eas": {
-        "projectId": "ef13d9c3-365c-419c-a9ec-19902bb68f4f"
+        "projectId": "7b48c6e5-e81b-4e33-b898-3fe8d2122626"
       }
-    }
+    },
+    "owner": "mehebub1"
   }
 }

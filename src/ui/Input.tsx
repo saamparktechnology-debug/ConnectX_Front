@@ -12,7 +12,9 @@ type Props = TextInputProps & {
   rightSlot?: React.ReactNode;
 };
 
-export const Input = forwardRef<TextInput, Props>(function Input(
+type InputRef = React.ComponentRef<typeof TextInput>;
+
+export const Input = forwardRef<InputRef, Props>(function Input(
   { label, error, hint, leftSlot, rightSlot, style, onFocus, onBlur, ...rest },
   ref,
 ) {

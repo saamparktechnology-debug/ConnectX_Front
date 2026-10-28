@@ -196,7 +196,9 @@ export default function CallsScreen() {
           refreshControl={
             <RefreshControl
               refreshing={isRefetching}
-              onRefresh={refetch}
+              onRefresh={() => {
+                void refetch();
+              }}
               tintColor={colors.primary}
             />
           }
@@ -230,7 +232,7 @@ export default function CallsScreen() {
               >
                 <ActivityIndicator color={colors.primary} />
               </View>
-            ) : null
+            ) : undefined
           }
           showsVerticalScrollIndicator={false}
         />

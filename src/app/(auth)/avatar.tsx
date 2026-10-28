@@ -45,16 +45,19 @@ export default function AvatarScreen() {
         uuid: data.user.uuid,
         publicId: data.user.publicId,
         phone: data.user.phone,
-        gender: data.user.gender,
-        nickname: data.user.nickname,
-        avatarUrl: data.user.avatarUrl,
-        verificationStatus: data.user.verificationStatus,
-        walletBalance: data.user.walletBalance,
-        isOnline: data.user.isOnline,
-        onboardingCompleted: data.user.onboardingCompleted,
-        primaryLanguage: data.user.primaryLanguage,
-        termsAcceptedAt: data.user.termsAcceptedAt,
-        channelsAcknowledgedAt: data.user.channelsAcknowledgedAt,
+        gender: data.user.gender ?? params.gender,
+        nickname: data.user.nickname ?? params.nickname,
+        avatarUrl: data.user.avatarUrl ?? avatar,
+        verificationStatus: data.user.verificationStatus ?? "unverified",
+        walletBalance: data.user.walletBalance ?? "0.00",
+        isOnline: data.user.isOnline ?? false,
+        onboardingCompleted:
+          data.user.gender === "male" || !isFemale
+            ? true
+            : Boolean(data.user.onboardingCompleted),
+        primaryLanguage: data.user.primaryLanguage ?? null,
+        termsAcceptedAt: data.user.termsAcceptedAt ?? null,
+        channelsAcknowledgedAt: data.user.channelsAcknowledgedAt ?? null,
       };
 
       await setSession({

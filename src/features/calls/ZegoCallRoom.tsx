@@ -3,10 +3,6 @@ import { useAuthStore } from "@/auth/authStore";
 import { useTheme } from "@/theme";
 import { Text } from "@/ui";
 import { Ionicons } from "@expo/vector-icons";
-import {
-  ONE_ON_ONE_VOICE_CALL_CONFIG,
-  ZegoMenuBarButtonName,
-} from "@zegocloud/zego-uikit-prebuilt-call-rn";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
@@ -16,17 +12,25 @@ import {
 } from "react-native";
 import { zegoConfig, zegoUserId, zegoUserName } from "./zegoService";
 
-// eslint-disable-next-line @typescript-eslint/no-var-requires
 let ZegoUIKitPrebuiltCall: any = null;
+let ONE_ON_ONE_VOICE_CALL_CONFIG: any = {};
+let ZegoMenuBarButtonName: any = {};
 let zegoLoadError: string | null = null;
 
 try {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const mod = require("@zegocloud/zego-uikit-prebuilt-call-rn");
   ZegoUIKitPrebuiltCall = mod.ZegoUIKitPrebuiltCall ?? null;
-  if (!ZegoUIKitPrebuiltCall)
+  ONE_ON_ONE_VOICE_CALL_CONFIG = mod.ONE_ON_ONE_VOICE_CALL_CONFIG ?? {};
+  ZegoMenuBarButtonName = mod.ZegoMenuBarButtonName ?? {};
+  if (!ZegoUIKitPrebuiltCall) {
     zegoLoadError = "ZegoUIKitPrebuiltCall export missing";
+  }
 } catch (err) {
-  zegoLoadError = err instanceof Error ? err.message : "load error";
+  zegoLoadError =
+    err instanceof Error
+      ? err.message
+      : "ZEGOCLOUD native module not linked in this build";
 }
 
 type Props = {
@@ -146,12 +150,12 @@ export function ZegoCallRoom({
         turnOnMicrophoneWhenJoining: true,
         useSpeakerWhenJoining: true,
         bottomMenuBarConfig: {
-          ...ONE_ON_ONE_VOICE_CALL_CONFIG.bottomMenuBarConfig,
+          ...ONE_ON_ONE_VOICE_CALL_CONFIG?.bottomMenuBarConfig,
           buttons: [
             ZegoMenuBarButtonName.toggleMicrophoneButton,
             ZegoMenuBarButtonName.switchAudioOutputButton,
             ZegoMenuBarButtonName.hangUpButton,
-          ],
+          ].filter((b) => b !== undefined),
           maxCount: 3,
         },
         onCallEnd: (callID: string, reason: any, duration: number) => {

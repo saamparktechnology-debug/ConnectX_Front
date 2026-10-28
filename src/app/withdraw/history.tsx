@@ -90,7 +90,9 @@ export default function WithdrawalHistoryScreen() {
           refreshControl={
             <RefreshControl
               refreshing={isRefetching}
-              onRefresh={refetch}
+              onRefresh={() => {
+                void refetch();
+              }}
               tintColor={colors.rose}
             />
           }

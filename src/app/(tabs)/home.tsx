@@ -201,7 +201,9 @@ function MaleHome() {
         refreshControl={
           <RefreshControl
             refreshing={isRefetching}
-            onRefresh={refetch}
+            onRefresh={() => {
+              void refetch();
+            }}
             tintColor={colors.primary}
           />
         }

@@ -60,6 +60,10 @@ export default function LanguageScreen() {
   });
 
   if (!user) return null;
+  if (user.gender === "male") {
+    router.replace("/(tabs)/home");
+    return null;
+  }
 
   return (
     <Screen>

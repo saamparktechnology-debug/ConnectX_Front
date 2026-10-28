@@ -1,13 +1,4 @@
-// LOGIC PRESERVED:
-//   - gender-aware tab list (isFemale hides search tab)
-//   - all tab route names: home, search, calls, wallet, profile
-//   - profile tab hidden (accessed via avatar)
-// VISUAL CHANGES:
-//   - active color = blue, inactive = muted
-//   - lighter tab bar background
-//   - filled icons (was outline)
-//   - NO chat tab (not implemented yet)
-
+// src/app/(tabs)/_layout.tsx
 import { useAuthStore } from "@/auth/authStore";
 import { useTheme } from "@/theme";
 import { Ionicons } from "@expo/vector-icons";
@@ -46,7 +37,7 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? "home" : "home-outline"}
-              color={color}
+              color={String(color)}
               size={24}
             />
           ),
@@ -60,7 +51,7 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? "search" : "search-outline"}
-              color={color}
+              color={String(color)}
               size={24}
             />
           ),
@@ -75,7 +66,7 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? "wallet" : "wallet-outline"}
-              color={color}
+              color={String(color)}
               size={24}
             />
           ),
@@ -89,7 +80,7 @@ export default function TabsLayout() {
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name={focused ? "time" : "time-outline"}
-              color={color}
+              color={String(color)}
               size={24}
             />
           ),
@@ -99,7 +90,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          href: null, // accessed via avatar in home's top bar
+          href: null,
         }}
       />
     </Tabs>

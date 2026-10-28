@@ -4,7 +4,10 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { OfflineBanner } from "@/components/OfflineBanner";
 import { IncomingCallOverlay } from "@/features/calls/IncomingCallOverlay";
 import { useCallSocket } from "@/features/calls/useCallSocket";
-import { registerForPush } from "@/features/notifications/pushService";
+import {
+  addNotificationResponseListener,
+  registerForPush,
+} from "@/features/notifications/pushService";
 import { ThemeProvider, useTheme } from "@/theme";
 import { LoadingOverlay, ToastProvider } from "@/ui";
 import {
@@ -13,7 +16,6 @@ import {
   useQuery,
 } from "@tanstack/react-query";
 import * as Linking from "expo-linking";
-import * as Notifications from "expo-notifications";
 import { Stack, useRouter } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
@@ -53,20 +55,16 @@ function BootGate() {
 
   // Notification tap → route
   useEffect(() => {
-    const sub = Notifications.addNotificationResponseReceivedListener(
-      (response) => {
-        const data = response.notification.request.content.data as any;
-        console.log("[push] tapped", data);
-        if (
-          data?.type === "call:incoming" ||
-          data?.type === "call:random-incoming"
-        ) {
-          // Bring user to home; incoming modal will appear via socket
-          router.push("/(tabs)/home");
-        }
-      },
-    );
-    return () => sub.remove();
+    return addNotificationResponseListener((response) => {
+      const data = response?.notification?.request?.content?.data as any;
+      console.log("[push] tapped", data);
+      if (
+        data?.type === "call:incoming" ||
+        data?.type === "call:random-incoming"
+      ) {
+        router.push("/(tabs)/home");
+      }
+    });
   }, [router]);
 
   // ── Deep link handling ─────────────────────────────────────────
@@ -192,7 +190,6 @@ function BootGate() {
     <>
       <StatusBar style={activeScheme === "dark" ? "light" : "dark"} />
       <Stack
-        initialRouteName="index"
         screenOptions={{
           headerShown: false,
           animation: "slide_from_right",

@@ -1,3 +1,4 @@
+// src/app/index.tsx
 import { ratingsApi } from "@/api/ratings";
 import { usersApi } from "@/api/users";
 import { useAuthStore } from "@/auth/authStore";
@@ -15,7 +16,7 @@ export default function Index() {
     staleTime: 0,
   });
 
-  const isMale = user?.gender === "male";
+  const isMale = (me?.gender ?? user?.gender) === "male";
   const { data: pendingRating, isLoading: loadingRating } = useQuery({
     queryKey: ["ratings", "pending"],
     queryFn: () => ratingsApi.getPending(),
@@ -32,18 +33,13 @@ export default function Index() {
   if (loadingMe) return null;
   if (isMale && loadingRating) return null;
 
-  // Prefer server state over the local snapshot for anything that
-  // the signup flow may have completed after the snapshot was saved.
-  const liveOnboardingCompleted =
-    me?.onboardingCompleted ?? user.onboardingCompleted;
+  const liveGender = me?.gender ?? user.gender;
   const livePrimaryLanguage = me?.primaryLanguage ?? user.primaryLanguage;
   const liveStatus = me?.verificationStatus ?? user.verificationStatus;
 
-  if (!liveOnboardingCompleted) {
-    return <Redirect href="/(onboarding)/profile" />;
-  }
-
-  if (user.gender === "female") {
+  // Male users complete all required info during (auth) signup.
+  // Only female accounts require language, voice verification, terms, and channels.
+  if (liveGender === "female") {
     if (!livePrimaryLanguage) {
       return <Redirect href="/(onboarding)/language" />;
     }
