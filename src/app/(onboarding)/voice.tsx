@@ -160,7 +160,7 @@ export default function VoiceVerificationScreen() {
         "audio/m4a",
         setUploadPercent,
       );
-      console.log("[voice] uploaded:", uploaded);
+      // console.log("[voice] uploaded:", uploaded);
 
       const submitted = await verificationsApi.submitVoice({
         voiceUrl: uploaded.voiceUrl,

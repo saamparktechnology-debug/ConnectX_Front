@@ -152,7 +152,7 @@ function MaleHome() {
             </View>
           </Pressable>
 
-          <Pressable onPress={() => router.push("/(tabs)/profile" as never)}>
+          <Pressable onPress={() => router.push("/profile")}>
             <Avatar
               uri={user?.avatarUrl}
               name={user?.nickname ?? "U"}
@@ -571,7 +571,7 @@ function FemaleHome() {
               Top 🏆
             </Text>
           </View>
-          <Pressable onPress={() => router.push("/(tabs)/profile" as never)}>
+          <Pressable onPress={() => router.push("/profile")}>
             <Avatar
               uri={user?.avatarUrl}
               name={user?.nickname ?? "U"}

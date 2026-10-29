@@ -81,10 +81,10 @@ function logApi(icon: string, method: string, url: string, extra?: any) {
   const line = `${icon} [${ts()}] ${method.toUpperCase()} ${url}`;
   if (extra !== undefined) {
     // eslint-disable-next-line no-console
-    console.log(line, JSON.stringify(extra, null, 2).slice(0, 2000));
+    // console.log(line, JSON.stringify(extra, null, 2).slice(0, 2000));
   } else {
     // eslint-disable-next-line no-console
-    console.log(line);
+    // console.log(line);
   }
 }
 // ──────────────────────────────────────────────────────────────────────────
@@ -134,7 +134,7 @@ async function refreshAccessToken(): Promise<string> {
 
     if (DEV) {
       // eslint-disable-next-line no-console
-      console.log(`🔄 [${ts()}] Refreshing access token...`);
+      // console.log(`🔄 [${ts()}] Refreshing access token...`);
     }
 
     const resp = await axios.post<
@@ -151,7 +151,7 @@ async function refreshAccessToken(): Promise<string> {
 
     if (DEV) {
       // eslint-disable-next-line no-console
-      console.log(`✓ [${ts()}] Token refreshed`);
+      // console.log(`✓ [${ts()}] Token refreshed`);
     }
 
     return accessToken;

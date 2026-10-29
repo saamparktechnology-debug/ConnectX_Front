@@ -21,6 +21,6 @@ export function showToast(message: string, kind: ToastKind = "info"): void {
   } else {
     // Fallback so nothing is silently swallowed during early boot
     // eslint-disable-next-line no-console
-    console.log(`[toast:${kind}] ${message}`);
+    // console.log(`[toast:${kind}] ${message}`);
   }
 }

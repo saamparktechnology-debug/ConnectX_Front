@@ -72,7 +72,7 @@ export function AvatarPicker({
         mime,
         setUploadPercent,
       );
-      console.log("[avatar] uploaded:", uploaded.avatarUrl);
+      // console.log("[avatar] uploaded:", uploaded.avatarUrl);
       // Replace local URI with the public URL so it persists across devices
       onChange(uploaded.avatarUrl);
       onUploadComplete?.(uploaded.avatarUrl);

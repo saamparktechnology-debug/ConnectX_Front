@@ -57,7 +57,7 @@ function BootGate() {
   useEffect(() => {
     return addNotificationResponseListener((response) => {
       const data = response?.notification?.request?.content?.data as any;
-      console.log("[push] tapped", data);
+      // console.log("[push] tapped", data);
       if (
         data?.type === "call:incoming" ||
         data?.type === "call:random-incoming"
@@ -74,12 +74,12 @@ function BootGate() {
       try {
         const parsed = Linking.parse(url);
         const { hostname, path, queryParams } = parsed;
-        console.log("[deeplink] received:", {
-          url,
-          hostname,
-          path,
-          queryParams,
-        });
+        // console.log("[deeplink] received:", {
+        //   url,
+        //   hostname,
+        //   path,
+        //   queryParams,
+        // });
 
         if (
           hostname === "call" &&
